@@ -1,0 +1,80 @@
+# Provides ways to work with large multidimensional arrays
+import numpy as np 
+# Allows for further data manipulation and analysis
+import pandas as pd
+
+# In Anaconda -> Environments -> Not Installed -> pandas-datareader -> Apply
+from pandas_datareader import data as web # Reads stock data 
+import matplotlib.pyplot as plt # Plotting
+import matplotlib.dates as mdates # Styling dates
+%matplotlib inline
+
+# pip install cufflinks -> In Qt Console
+import cufflinks as cf
+# pip install plotly==5.3.1 -> In Qt Console
+import plotly.express as px
+import plotly.graph_objects as go
+
+# Make Plotly work in your Jupyter Notebook
+from plotly.offline import download_plotlyjs, init_notebook_mode, plot, iplot
+init_notebook_mode(connected=True)
+# Use Plotly locally
+cf.go_offline()
+
+import warnings
+warnings.simplefilter("ignore")
+
+# pip install yfinance in Qt Console or Powershell Prompt on Windows
+import yfinance as yf
+
+from plotly.subplots import make_subplots
+
+# Install the Python Technical Analysis library
+# pip install ta in Qt Console or Powershell prompt
+from ta.trend import MACD
+from ta.momentum import StochasticOscillator
+
+# TA-Lib is used by traders to perform technical analysis
+# Go here : https://github.com/mrjbq7/ta-lib#dependencies
+# Download ta-lib-0.4.0-msvc.zip and unzip to C:\ta-lib
+# On Windows Download : https://visualstudio.microsoft.com/visual-cpp-build-tools/
+# Remember to Select [Visual C++]
+# Build using build tools
+# Download TA_Lib-0.4.21-cp38-cp38-win_amd64.whl from
+# https://www.lfd.uci.edu/~gohlke/pythonlibs/#ta-lib
+# In Powershell Prompt pip install 
+# C:\Users\derek\Downloads\TA_Lib-0.4.21-cp38-cp38-win_amd64.whl
+
+# On MacOS 
+import talib as ta
+
+
+
+# Use Cufflinks QuantFigure Module to create Bollinger Bands
+# add_sma - Simple Moving Average
+# add_ema() - Exponential Moving Average
+# add_trendline() - Trend line
+# add_support() - Support line
+# add_rsi - Relative Strength Indicator
+# add_adx - Average Directional Index
+# add_atr() - Average True Range
+# add_macd() - Moving Average Convergence Divergence
+# add_bollinger_bands - Bollinger Bands
+# add_volume - Volume bars
+# add_cci() - Commodity Channel Indicator
+# add_dmi() - Directional Movement Index
+# add_ptps() - Parabolic SAR
+# add_resistance() - Resistance line
+esmini_df = yf.download(tickers="ES=F", period="1yr", interval='1m')
+esmini_df
+
+# qf=cf.QuantFig(esmini_df, title='MSFT Quant Figure',legend='top',name='GS')
+# esmini_df.iplot(kind="ohlc",
+#                           keys=["Open", "High", "Low", "Close"])
+qf=cf.QuantFig(esmini_df, kind="ohlc",
+                          keys=["Open", "High", "Low", "Close"])
+qf.add_bollinger_bands()
+# qf.add_lr()
+qf.add_sma([20,80],width=2,color=['orange','purple'],legendgroup=True)
+qf.add_sma(200, width=2,color='yellow',legendgroup=True)
+qf.iplot()
