@@ -1,0 +1,135 @@
+# Provides ways to work with large multidimensional arrays
+import numpy as np 
+# Allows for further data manipulation and analysis
+import pandas as pd
+
+# In Anaconda -> Environments -> Not Installed -> pandas-datareader -> Apply
+from pandas_datareader import data as web # Reads stock data 
+import matplotlib.pyplot as plt # Plotting
+import matplotlib.dates as mdates # Styling dates
+%matplotlib inline
+
+# pip install cufflinks -> In Qt Console
+import cufflinks as cf
+# pip install plotly==5.3.1 -> In Qt Console
+import plotly.express as px
+import plotly.graph_objects as go
+
+# Make Plotly work in your Jupyter Notebook
+from plotly.offline import download_plotlyjs, init_notebook_mode, plot, iplot
+init_notebook_mode(connected=True)
+# Use Plotly locally
+cf.go_offline()
+
+import warnings
+warnings.simplefilter("ignore")
+
+# pip install yfinance in Qt Console or Powershell Prompt on Windows
+import yfinance as yf
+
+from plotly.subplots import make_subplots
+
+# Valid periods: 1d,5d,1mo,3mo,6mo,1y,2y,5y,10y,ytd,max
+# Valid intervals: 1m,2m,5m,15m,30m,60m,90m,1h,1d,5d,1wk,1mo,3mo
+esmini = yf.download(tickers='ES=F', period='1mo', interval='5m')
+esmini
+
+x = esmini.index
+close = esmini['Adj Close']
+high = esmini['High']
+low = esmini['Low']
+openp = esmini['Open']
+
+# Calculates 5 and 20 day moving average
+# Takes prices and divides them by a defined time period
+# Short periods react quickly, while longer react slower to price changes
+# They are used to see if a stock is in an uptrend
+# If a short term trend is above the longterm that is a sign an uptrend is expected
+esmini['MA5'] = esmini.Close.rolling(5).mean()
+esmini['MA20'] = esmini.Close.rolling(20).mean()
+esmini
+
+# Create candlestick plot
+candles = go.Candlestick(x=x, open=openp, high=high,
+                         low=low, close=close, name="Candles")
+# Create 5 and 20 day moving average
+ma5 = go.Scatter(x=esmini.index, y=esmini.MA5, 
+                 line=dict(color='black', width=1), name="MA5")
+ma20 = go.Scatter(x=esmini.index, y=esmini.MA20, 
+                  line=dict(color='black', width=1), name="MA20")
+                  
+# Create volume bar chart
+vol = go.Bar(x=msft.index, y=esmini['Volume'], name="Volume")
+
+# Create figure with secondary y-axis
+fig = make_subplots(specs=[[{"secondary_y": True}]])
+
+# Add plots
+fig.add_trace(trace=candles, secondary_y=True)
+fig.add_trace(trace=ma5, secondary_y=True)
+fig.add_trace(trace=ma20, secondary_y=True)
+fig.add_trace(trace=vol, secondary_y=False)
+
+# Valid Steps : 'month', 'year', 'day', 'hour', 'minute', 'second', 'all'
+fig.update_layout(
+    xaxis=dict(
+        rangeselector=dict(
+            buttons=list([
+                dict(count=15,
+                     label="15M",
+                     step="minute",
+                     stepmode="backward"),
+                dict(count=45,
+                     label="45M",
+                     step="minute",
+                     stepmode="backward"),
+                dict(count=1,
+                     label="1HR",
+                     step="hour",
+                     stepmode="todate"),
+                dict(count=1,
+                     label="1D",
+                     step="day",
+                     stepmode="todate"),
+                dict(count=3,
+                     label="3D",
+                     step="day",
+                     stepmode="todate"),
+                dict(count=7,
+                     label="1W",
+                     step="day",
+                     stepmode="backward"),
+                dict(count=14,
+                     label="2W",
+                     step="day",
+                     stepmode="backward"),
+                dict(count=1,
+                     label="1M",
+                     step="month",
+                     stepmode="backward"),
+                dict(label="All", step="all")
+            ])
+        ),
+        rangeslider=dict(
+            visible=True
+        ),
+        type="date"
+    )
+)
+fig.update_layout(xaxis_title="Dates", yaxis_title="Stock Price", 
+                  title="ES-Mini Candlestick Chart", 
+                  width=1000, height=800)
+
+# Hides plot between saturday and monday
+# Hide hours between 9:30am to 4pm
+# Hide specific days like holidays
+fig.update_xaxes(
+        rangeslider_visible=True,
+        rangebreaks=[
+            dict(bounds=["sat", "mon"]),
+            dict(bounds=[16, 9.5], pattern="hour"), 
+            dict(values=["2020-12-25", "2021-01-01", "2021-07-04"])
+        ]
+    )
+
+fig.show()
