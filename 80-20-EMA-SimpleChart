@@ -1,0 +1,73 @@
+# Provides ways to work with large multidimensional arrays
+import numpy as np 
+# Allows for further data manipulation and analysis
+import pandas as pd
+
+# In Anaconda -> Environments -> Not Installed -> pandas-datareader -> Apply
+from pandas_datareader import data as web # Reads stock data 
+import matplotlib.pyplot as plt # Plotting
+import matplotlib.dates as mdates # Styling dates
+%matplotlib inline
+
+# pip install cufflinks -> In Qt Console
+import cufflinks as cf
+# pip install plotly==5.3.1 -> In Qt Console
+import plotly.express as px
+import plotly.graph_objects as go
+
+# Make Plotly work in your Jupyter Notebook
+from plotly.offline import download_plotlyjs, init_notebook_mode, plot, iplot
+init_notebook_mode(connected=True)
+# Use Plotly locally
+cf.go_offline()
+
+import warnings
+warnings.simplefilter("ignore")
+
+# pip install yfinance in Qt Console or Powershell Prompt on Windows
+import yfinance as yf
+
+from plotly.subplots import make_subplots
+
+# Valid periods: 1d,5d,1mo,3mo,6mo,1y,2y,5y,10y,ytd,max
+# Valid intervals: 1m,2m,5m,15m,30m,60m,90m,1h,1d,5d,1wk,1mo,3mo
+# Download MSFT, NEM and the S&P
+esmini_df = yf.download(tickers='ES=F', period='10y', interval='1d')
+esmini_df
+
+# Calculate MSFTs 20 day EMA
+
+# Define candlestick and moving average lines
+candle = go.Candlestick(x=esmini_df.index, open=esmini_df['Open'],
+                       high=esmini_df['High'], low=esmini_df['Low'],
+                       close=esmini_df['Close'], name='Candlestick')
+
+#Simple Moving Averages
+#ma20 = go.Scatter(x=esmini_ma20.index, y=esmini_ma20, 
+                  line=dict(color='orange', width=1), name="MA20")
+#ma80 = go.Scatter(x=esmini_ma80.index, y=esmini_ma80, 
+                   line=dict(color='purple', width=1), name="MA80")
+
+esmini_ema20 = esmini_df['Adj Close'].ewm(span=20, adjust=False).mean()
+
+esmini_ema80 = esmini_df['Adj Close'].ewm(span=80, adjust=False).mean()
+
+ema20 = go.Scatter(x=esmini_ema20.index, y=esmini_ema20, 
+                   line=dict(color='orange', width=1), name="EMA20")
+ema80 = go.Scatter(x=esmini_ema80.index, y=esmini_ema80, 
+                   line=dict(color='purple', width=1), name="EMA80")
+esmini_price = go.Scatter(x=esmini_df.index, y=esmini_df['Adj Close'], 
+                      line=dict(color='black', width=1), name="Price")
+
+fig = go.Figure()
+fig.add_trace(ema80)
+fig.add_trace(ema20)
+fig.add_trace(candle)
+                                              
+# Add title
+fig.update_layout(title="E-Mini")
+
+# Get rid of empty dates on the weekend
+fig.update_xaxes(rangebreaks=[dict(bounds=["sat", "mon"])])
+                                            
+fig.show()
