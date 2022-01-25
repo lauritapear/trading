@@ -88,6 +88,33 @@ def get_port_daily_return(sdate, edate, shares, tickers):
     
     return mult_df
 
+def merge_df_by_column_name(col_name, sdate, edate, *tickers):
+    # Will hold data for all dataframes with the same column name
+    mult_df = pd.DataFrame()
+    
+    for x in tickers:
+        df = get_df_from_csv(x)
+        
+        # NEW Check if your dataframe has duplicate indexes
+        if not df.index.is_unique:
+            # Delete duplicates 
+            df = df.loc[~df.index.duplicated(), :]
+        
+        mask = (df.index >= sdate) & (df.index <= edate)
+        mult_df[x] = df.loc[mask][col_name]
+        
+    return mult_df
+
+def get_df_from_csv(ticker):
+    try:
+        df = pd.read_csv(PATH + ticker + '.csv', index_col='Date', 
+                         parse_dates=True)
+    except FileNotFoundError:
+        pass
+        # print("File Doesn't Exist")
+    else:
+        return df
+
 # Remember These
 port_list = ["ES=F"]
 
@@ -106,7 +133,7 @@ tot_port_df = tot_port_df.fillna(method='ffill') # Fill in missing values using 
 
 tot_port_df
 
-# # # Delete all unneeded columns
+# # Delete all unneeded columns
 del_col = ["ES=F", "daily_return"]
 for x in del_col:
     tot_port_df = tot_port_df.drop([x], axis=1)
